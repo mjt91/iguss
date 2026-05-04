@@ -1,0 +1,329 @@
+:root {
+  --green: #2d6a4f;
+  --green-light: #52b788;
+  --green-dark: #1b4332;
+  --cream: #f8f9fa;
+  --red: #e63946;
+  --text: #212529;
+  --shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--cream);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+.app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding-bottom: 80px;
+}
+
+header {
+  background: var(--green);
+  color: white;
+  padding: 24px 16px;
+  text-align: center;
+}
+
+header h1 { font-size: 1.8rem; margin-bottom: 4px; }
+header p { opacity: 0.9; font-size: 0.95rem; }
+
+.tabs {
+  display: flex;
+  background: white;
+  border-bottom: 1px solid #ddd;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 14px 8px;
+  border: none;
+  background: white;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+}
+
+.tab-btn.active {
+  border-bottom-color: var(--green);
+  color: var(--green);
+  font-weight: 600;
+}
+
+.tab-content {
+  display: none;
+  padding: 16px;
+}
+
+.tab-content.active { display: block; }
+
+h2 {
+  font-size: 1.1rem;
+  margin-bottom: 16px;
+  color: var(--green-dark);
+}
+
+.plant-list { display: flex; flex-direction: column; gap: 12px; }
+
+.plant-card {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: var(--shadow);
+  position: relative;
+}
+
+.plant-card.overdue {
+  border-left: 4px solid var(--red);
+}
+
+.plant-card.due-soon {
+  border-left: 4px solid #f4a261;
+}
+
+.plant-card.ok {
+  border-left: 4px solid var(--green-light);
+}
+
+.plant-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  margin-bottom: 8px;
+}
+
+.plant-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.plant-type {
+  color: #666;
+  font-size: 0.85rem;
+  margin-top: 2px;
+}
+
+.plant-location {
+  font-size: 0.8rem;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: #e9ecef;
+}
+
+.plant-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.plant-status {
+  font-size: 0.85rem;
+}
+
+.plant-status .overdue-text { color: var(--red); font-weight: 600; }
+.plant-status .due-text { color: #f4a261; font-weight: 600; }
+.plant-status .ok-text { color: var(--green); }
+
+.water-btn {
+  background: var(--green);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.water-btn:active { transform: scale(0.97); }
+
+.card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #eee;
+}
+
+.card-actions button {
+  flex: 1;
+  padding: 6px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.empty {
+  text-align: center;
+  color: #888;
+  padding: 40px 20px;
+}
+
+/* Form */
+form label {
+  display: block;
+  margin-bottom: 14px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+form input, form select {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: white;
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 14px;
+  background: var(--green);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.btn-primary:active { transform: scale(0.98); }
+
+.btn-secondary {
+  padding: 10px 16px;
+  background: #e9ecef;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+/* Modal */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal.active { display: flex; }
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  width: 90%;
+  max-width: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-content h3 {
+  margin-bottom: 16px;
+  color: var(--green-dark);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.modal-actions button { flex: 1; }
+
+/* Install prompt */
+.install-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--green);
+  color: white;
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 50;
+}
+
+.install-bar button {
+  background: white;
+  color: var(--green);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* DB Search */
+#db-search-box { margin-bottom: 20px; }
+
+.db-results {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-top: 8px;
+  background: white;
+  display: none;
+}
+
+.db-results.active { display: block; }
+
+.db-result-item {
+  padding: 10px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  font-size: 0.9rem;
+}
+
+.db-result-item:last-child { border-bottom: none; }
+
+.db-result-item:hover { background: #f0f7f4; }
+
+.db-result-item .db-name { font-weight: 600; color: var(--green-dark); }
+.db-result-item .db-type { color: #888; font-size: 0.8rem; }
+.db-result-item .db-note { color: #666; font-size: 0.8rem; margin-top: 2px; }
+
+/* Divider */
+.db-divider {
+  text-align: center;
+  margin: 16px 0;
+  color: #888;
+  font-size: 0.85rem;
+  position: relative;
+}
+
+.db-divider::before,
+.db-divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 40%;
+  height: 1px;
+  background: #ddd;
+}
+
+.db-divider::before { left: 0; }
+.db-divider::after { right: 0; }

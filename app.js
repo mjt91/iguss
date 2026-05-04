@@ -1,0 +1,317 @@
+// iGuss — Pflanzen Gieß-Plan App
+
+const STORAGE_KEY = 'iguss_plants';
+
+// ── Helpers ──────────────────────────────────────────────
+function loadPlants() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+  } catch {
+    return [];
+  }
+}
+
+function savePlants(plants) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(plants));
+}
+
+function todayStr() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function daysSince(dateStr) {
+  const d1 = new Date(dateStr);
+  const d2 = new Date();
+  d2.setHours(0,0,0,0);
+  return Math.floor((d2 - d1) / (1000 * 60 * 60 * 24));
+}
+
+function daysUntilWater(plant) {
+  const passed = daysSince(plant.lastWatered);
+  return plant.interval - passed;
+}
+
+function locationIcon(loc) {
+  return loc === 'indoor' ? '🏠' : loc === 'pot' ? '🪴' : '🌱';
+}
+
+function locationLabel(loc) {
+  return loc === 'indoor' ? 'Haus' : loc === 'pot' ? 'Kübel' : 'Beet';
+}
+
+// ── Tabs ─────────────────────────────────────────────────
+function initTabs() {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+      render();
+    });
+  });
+}
+
+// ── Render ───────────────────────────────────────────────
+function render() {
+  const plants = loadPlants();
+  renderToday(plants);
+  renderAll(plants);
+}
+
+function renderToday(plants) {
+  const list = document.getElementById('today-list');
+  const due = plants
+    .map(p => ({ ...p, daysUntil: daysUntilWater(p) }))
+    .filter(p => p.daysUntil <= 0)
+    .sort((a, b) => a.daysUntil - b.daysUntil);
+
+  if (due.length === 0) {
+    list.innerHTML = '<p class="empty">🎉 Alles versorgt! Keine Pflanzen müssen heute gegossen werden.</p>';
+    return;
+  }
+
+  list.innerHTML = due.map(p => plantCard(p, true)).join('');
+  attachCardListeners();
+}
+
+function renderAll(plants) {
+  const list = document.getElementById('all-plants');
+  if (plants.length === 0) {
+    list.innerHTML = '<p class="empty">Noch keine Pflanzen. Gehe auf „Hinzufügen“!</p>';
+    return;
+  }
+
+  const sorted = plants
+    .map(p => ({ ...p, daysUntil: daysUntilWater(p) }))
+    .sort((a, b) => a.daysUntil - b.daysUntil);
+
+  list.innerHTML = sorted.map(p => plantCard(p, false)).join('');
+  attachCardListeners();
+}
+
+function plantCard(p, isToday) {
+  const days = p.daysUntil;
+  let statusClass = 'ok';
+  let statusText = `<span class="ok-text">in ${days} Tagen</span>`;
+
+  if (days < 0) {
+    statusClass = 'overdue';
+    statusText = `<span class="overdue-text">${Math.abs(days)} Tag${Math.abs(days) !== 1 ? 'e' : ''} überfällig!</span>`;
+  } else if (days === 0) {
+    statusClass = 'overdue';
+    statusText = `<span class="overdue-text">Heute!</span>`;
+  } else if (days === 1) {
+    statusClass = 'due-soon';
+    statusText = `<span class="due-text">Morgen</span>`;
+  } else if (days <= 2) {
+    statusClass = 'due-soon';
+    statusText = `<span class="due-text">in ${days} Tagen</span>`;
+  }
+
+  return `
+    <div class="plant-card ${statusClass}" data-id="${p.id}">
+      <div class="plant-header">
+        <div>
+          <div class="plant-name">${p.name}</div>
+          <div class="plant-type">${p.type || ''}</div>
+        </div>
+        <span class="plant-location">${locationIcon(p.location)} ${locationLabel(p.location)}</span>
+      </div>
+      <div class="plant-info">
+        <div class="plant-status">${statusText} · alle ${p.interval} Tage</div>
+        <button class="water-btn" data-id="${p.id}">💧 Gegossen</button>
+      </div>
+      ${!isToday ? `
+        <div class="card-actions">
+          <button class="edit-btn" data-id="${p.id}">✏️ Bearbeiten</button>
+          <button class="delete-btn" data-id="${p.id}">🗑️ Löschen</button>
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+function attachCardListeners() {
+  document.querySelectorAll('.water-btn').forEach(btn => {
+    btn.addEventListener('click', () => waterPlant(btn.dataset.id));
+  });
+  document.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => openEdit(btn.dataset.id));
+  });
+  document.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.addEventListener('click', () => deletePlant(btn.dataset.id));
+  });
+}
+
+// ── Actions ──────────────────────────────────────────────
+function waterPlant(id) {
+  const plants = loadPlants();
+  const p = plants.find(x => x.id === id);
+  if (!p) return;
+  p.lastWatered = todayStr();
+  savePlants(plants);
+  render();
+}
+
+function deletePlant(id) {
+  if (!confirm('Pflanze wirklich löschen?')) return;
+  let plants = loadPlants();
+  plants = plants.filter(x => x.id !== id);
+  savePlants(plants);
+  render();
+}
+
+function openEdit(id) {
+  const plants = loadPlants();
+  const p = plants.find(x => x.id === id);
+  if (!p) return;
+
+  document.getElementById('e-id').value = p.id;
+  document.getElementById('e-name').value = p.name;
+  document.getElementById('e-type').value = p.type || '';
+  document.getElementById('e-location').value = p.location;
+  document.getElementById('e-interval').value = p.interval;
+  document.getElementById('e-last-watered').value = p.lastWatered;
+
+  document.getElementById('edit-modal').classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('edit-modal').classList.remove('active');
+}
+
+// ── Forms ────────────────────────────────────────────────
+function initForms() {
+  // Add form
+  document.getElementById('plant-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const plants = loadPlants();
+    plants.push({
+      id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
+      name: document.getElementById('p-name').value.trim(),
+      type: document.getElementById('p-type').value.trim(),
+      location: document.getElementById('p-location').value,
+      interval: parseInt(document.getElementById('p-interval').value),
+      lastWatered: document.getElementById('p-last-watered').value,
+    });
+    savePlants(plants);
+    e.target.reset();
+    document.getElementById('p-last-watered').value = todayStr();
+    
+    // Switch to "Today" tab
+    document.querySelector('[data-tab="today"]').click();
+  });
+
+  // Edit form
+  document.getElementById('edit-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const plants = loadPlants();
+    const id = document.getElementById('e-id').value;
+    const p = plants.find(x => x.id === id);
+    if (!p) return;
+
+    p.name = document.getElementById('e-name').value.trim();
+    p.type = document.getElementById('e-type').value.trim();
+    p.location = document.getElementById('e-location').value;
+    p.interval = parseInt(document.getElementById('e-interval').value);
+    p.lastWatered = document.getElementById('e-last-watered').value;
+
+    savePlants(plants);
+    closeModal();
+    render();
+  });
+
+  // Close modal on backdrop click
+  document.getElementById('edit-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('edit-modal')) closeModal();
+  });
+}
+
+// ── PWA / Install prompt ─────────────────────────────────
+function initPWA() {
+  // Register service worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(console.error);
+  }
+
+  // Install prompt
+  let deferredPrompt;
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    showInstallBar();
+  });
+
+  function showInstallBar() {
+    if (document.querySelector('.install-bar')) return;
+    const bar = document.createElement('div');
+    bar.className = 'install-bar';
+    bar.innerHTML = `
+      <span>📲 iGuss als App installieren?</span>
+      <button id="install-btn">Installieren</button>
+    `;
+    document.body.appendChild(bar);
+    document.getElementById('install-btn').addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      bar.remove();
+    });
+  }
+}
+
+// ── Init ─────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // DB Search
+  const dbSearch = document.getElementById('p-db-search');
+  const dbResults = document.getElementById('db-results');
+
+  if (dbSearch && typeof PLANT_DB !== 'undefined') {
+    dbSearch.addEventListener('input', () => {
+      const q = dbSearch.value.trim().toLowerCase();
+      if (!q) { dbResults.classList.remove('active'); return; }
+
+      const hits = PLANT_DB.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        p.type.toLowerCase().includes(q)
+      ).slice(0, 8);
+
+      if (hits.length === 0) { dbResults.classList.remove('active'); return; }
+
+      dbResults.innerHTML = hits.map(p => `
+        <div class="db-result-item" data-name="${p.name}" data-type="${p.type}"
+             data-interval="${p.interval}" data-location="${p.location}" data-note="${p.note || ''}">
+          <div>
+            <span class="db-name">${p.name}</span>
+            <span class="db-type">${p.type}</span>
+          </div>
+          <div class="db-note">💧 alle ${p.interval} Tage · ${locationLabel(p.location)}${p.note ? ' · ' + p.note : ''}</div>
+        </div>
+      `).join('');
+      dbResults.classList.add('active');
+
+      dbResults.querySelectorAll('.db-result-item').forEach(item => {
+        item.addEventListener('click', () => {
+          document.getElementById('p-name').value = item.dataset.name;
+          document.getElementById('p-type').value = item.dataset.type;
+          document.getElementById('p-interval').value = item.dataset.interval;
+          document.getElementById('p-location').value = item.dataset.location;
+          dbSearch.value = '';
+          dbResults.classList.remove('active');
+        });
+      });
+    });
+
+    // Close on outside click
+    document.addEventListener('click', e => {
+      if (!dbSearch.contains(e.target) && !dbResults.contains(e.target)) {
+        dbResults.classList.remove('active');
+      }
+    });
+  }
+  initForms();
+  initPWA();
+  render();
+});
