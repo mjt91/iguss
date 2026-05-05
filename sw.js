@@ -1,11 +1,12 @@
-// iGuss Service Worker — cache-first for offline use
+// iGuss Service Worker — stale-while-revalidate for fresh content
 
-const CACHE_NAME = 'iguss-v1';
+const CACHE_NAME = 'iguss-v3';
 const ASSETS = [
-  '/iguss/index.html',
-  '/iguss/style.css',
-  '/iguss/app.js',
-  '/iguss/manifest.json'
+  './index.html',
+  './style.css',
+  './app.js',
+  './manifest.json',
+  './plants-db.js'
 ];
 
 self.addEventListener('install', e => {
@@ -17,12 +18,32 @@ self.addEventListener('install', e => {
 
 self.addEventListener('fetch', e => {
   e.respondWith(
-    caches.match(e.request).then(response => {
-      return response || fetch(e.request);
+    caches.match(e.request).then(cachedResponse => {
+      // Always fetch in background to update cache
+      const fetchPromise = fetch(e.request).then(networkResponse => {
+        if (networkResponse.ok) {
+          const cacheCopy = networkResponse.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(e.request, cacheCopy);
+          });
+        }
+        return networkResponse;
+      }).catch(() => cachedResponse); // fallback to cache if network fails
+
+      // Return cached version immediately (stale-while-revalidate)
+      return cachedResponse || fetchPromise;
     })
   );
 });
 
 self.addEventListener('activate', e => {
-  e.waitUntil(self.clients.claim());
+  e.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames
+          .filter(name => name !== CACHE_NAME)
+          .map(name => caches.delete(name))
+      );
+    }).then(() => self.clients.claim())
+  );
 });

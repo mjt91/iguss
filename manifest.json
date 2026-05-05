@@ -2,7 +2,7 @@
   "name": "iGuss",
   "short_name": "iGuss",
   "description": "Dein Pflanzen Gieß-Plan",
-  "start_url": "/iguss/index.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f8f9fa",
   "theme_color": "#2d6a4f",

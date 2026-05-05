@@ -6,11 +6,16 @@
 
 const PLANT_DB = [
   // ── Gemüse: Hoch Wasserbedarf ──
-  { name: "Tomate", type: "Solanum lycopersicum", interval: 2, location: "pot", note: "Hochstämmig/Busch — unbedingt regelmäßig, nie austrocknen lassen" },
-  { name: "Gurke", type: "Cucumis sativus", interval: 2, location: "pot", note: "Sehr wasserbedürftig, besonders bei Fruchtansatz" },
-  { name: "Zucchini", type: "Cucurbita pepo", interval: 2, location: "pot", note: "2-3 Liter/Tag, bei Hitze bis 5L" },
-  { name: "Paprika", type: "Capsicum annuum", interval: 3, location: "pot", note: "Gleichmäßig gießen, Staunässe vermeiden" },
-  { name: "Aubergine", type: "Solanum melongena", interval: 3, location: "pot", note: "Wärmeliebend, regelmäßig gießen" },
+  { name: "Tomate (Kübel)", type: "Solanum lycopersicum", interval: 2, location: "pot", note: "Hochstämmig/Busch — unbedingt regelmäßig, nie austrocknen lassen" },
+  { name: "Tomate (Beet)", type: "Solanum lycopersicum", interval: 4, location: "bed", note: "Im Beet tiefer wurzelnd, weniger oft gießen als im Kübel" },
+  { name: "Gurke (Kübel)", type: "Cucumis sativus", interval: 2, location: "pot", note: "Sehr wasserbedürftig, besonders bei Fruchtansatz" },
+  { name: "Gurke (Beet)", type: "Cucumis sativus", interval: 4, location: "bed", note: "Im Beet 3-4 Tage, bei Hitze öfter" },
+  { name: "Zucchini (Kübel)", type: "Cucurbita pepo", interval: 2, location: "pot", note: "2-3 Liter/Tag, bei Hitze bis 5L" },
+  { name: "Zucchini (Beet)", type: "Cucurbita pepo", interval: 4, location: "bed", note: "Im Beet tiefer wurzelnd, alle 3-4 Tage" },
+  { name: "Paprika (Kübel)", type: "Capsicum annuum", interval: 3, location: "pot", note: "Gleichmäßig gießen, Staunässe vermeiden" },
+  { name: "Paprika (Beet)", type: "Capsicum annuum", interval: 5, location: "bed", note: "Im Beet weniger empfindlich, alle 4-5 Tage" },
+  { name: "Aubergine (Kübel)", type: "Solanum melongena", interval: 3, location: "pot", note: "Wärmeliebend, regelmäßig gießen" },
+  { name: "Aubergine (Beet)", type: "Solanum melongena", interval: 5, location: "bed", note: "Im Beet alle 4-5 Tage, bei Hitze öfter" },
   { name: "Kürbis", type: "Cucurbita maxima", interval: 3, location: "bed", note: "Tief wurzelnd, aber viel Wasser bei Fruchtbildung" },
   { name: "Kopfsalat", type: "Lactuca sativa", interval: 2, location: "bed", note: "Schnell welk, niemals austrocknen" },
   { name: "Radieschen", type: "Raphanus sativus", interval: 2, location: "bed", note: "Schnell wachsend, gleichmäßig feucht halten" },
@@ -35,21 +40,31 @@ const PLANT_DB = [
   { name: "Spargel", type: "Asparagus officinalis", interval: 7, location: "bed", note: "Tief wurzelnd, nach der Ernte weniger" },
 
   // ── Kräuter: Trockenheitsverträglich (14 Tage) ──
-  { name: "Lavendel", type: "Lavandula angustifolia", interval: 14, location: "pot", note: "Trockenheitsverträglich! Zu viel Wasser = Wurzelfäule" },
-  { name: "Rosmarin", type: "Salvia rosmarinus", interval: 14, location: "pot", note: "Mediterran, mag kein Staunässe" },
-  { name: "Thymian", type: "Thymus vulgaris", interval: 14, location: "pot", note: "Sehr robust, wenig Wasser" },
-  { name: "Salbei", type: "Salvia officinalis", interval: 14, location: "pot", note: "Trocken verträglich, guter Drainage wichtig" },
+  { name: "Lavendel (Kübel)", type: "Lavandula angustifolia", interval: 14, location: "pot", note: "Trockenheitsverträglich! Zu viel Wasser = Wurzelfäule" },
+  { name: "Lavendel (Beet)", type: "Lavandula angustifolia", interval: 14, location: "bed", note: "Trocken verträglich, guter Boden = weniger gießen" },
+  { name: "Rosmarin (Kübel)", type: "Salvia rosmarinus", interval: 14, location: "pot", note: "Mediterran, mag kein Staunässe" },
+  { name: "Rosmarin (Beet)", type: "Salvia rosmarinus", interval: 14, location: "bed", note: "Mediterran, trocken verträglich" },
+  { name: "Thymian (Kübel)", type: "Thymus vulgaris", interval: 14, location: "pot", note: "Sehr robust, wenig Wasser" },
+  { name: "Thymian (Beet)", type: "Thymus vulgaris", interval: 14, location: "bed", note: "Sehr anspruchslos" },
+  { name: "Salbei (Kübel)", type: "Salvia officinalis", interval: 14, location: "pot", note: "Trocken verträglich, guter Drainage wichtig" },
+  { name: "Salbei (Beet)", type: "Salvia officinalis", interval: 14, location: "bed", note: "Trocken verträglich" },
   { name: "Bohnenkraut", type: "Satureja hortensis", interval: 14, location: "pot", note: "Wärmeliebend, wenig Wasser" },
   { name: "Estragon", type: "Artemisia dracunculus", interval: 10, location: "pot", note: "Anspruchslos" },
   { name: "Liebstöckel", type: "Levisticum officinale", interval: 7, location: "bed", note: "Tief wurzelnd, robust" },
-  { name: "Schnittlauch", type: "Allium schoenoprasum", interval: 7, location: "pot", note: "Gleichmäßig feucht" },
-  { name: "Petersilie", type: "Petroselinum crispum", interval: 5, location: "pot", note: "Nie austrocknen lassen" },
+  { name: "Schnittlauch (Kübel)", type: "Allium schoenoprasum", interval: 7, location: "pot", note: "Gleichmäßig feucht" },
+  { name: "Schnittlauch (Beet)", type: "Allium schoenoprasum", interval: 10, location: "bed", note: "Im Beet sehr anspruchslos" },
+  { name: "Petersilie (Kübel)", type: "Petroselinum crispum", interval: 5, location: "pot", note: "Nie austrocknen lassen" },
+  { name: "Petersilie (Beet)", type: "Petroselinum crispum", interval: 7, location: "bed", note: "Im Beet tiefer wurzelnd, alle 5-7 Tage" },
   { name: "Dill", type: "Anethum graveolens", interval: 4, location: "bed", note: "Schnell zur Blüte, gleichmäßig gießen" },
   { name: "Kresse", type: "Lepidium sativum", interval: 2, location: "pot", note: "Immer feucht halten" },
-  { name: "Basilikum", type: "Ocimum basilicum", interval: 3, location: "pot", note: "Anspruchsvoll! Nicht austrocknen, aber keine Staunässe" },
-  { name: "Minze", type: "Mentha", interval: 3, location: "pot", note: "Wasserverbraucher, gut verträgt Feuchtigkeit" },
-  { name: "Melisse", type: "Melissa officinalis", interval: 5, location: "pot", note: "Robust, anspruchslos" },
-  { name: "Oregano", type: "Origanum vulgare", interval: 10, location: "pot", note: "Mediterran, trocken verträglich" },
+  { name: "Basilikum (Kübel)", type: "Ocimum basilicum", interval: 3, location: "pot", note: "Anspruchsvoll! Nicht austrocknen, aber keine Staunässe" },
+  { name: "Basilikum (Beet)", type: "Ocimum basilicum", interval: 5, location: "bed", note: "Im Beet alle 4-5 Tage, nicht zu nass" },
+  { name: "Minze (Kübel)", type: "Mentha", interval: 3, location: "pot", note: "Wasserverbraucher, gut verträgt Feuchtigkeit" },
+  { name: "Minze (Beet)", type: "Mentha", interval: 5, location: "bed", note: "Im Beet alle 4-5 Tage, verträgt auch mehr" },
+  { name: "Melisse (Kübel)", type: "Melissa officinalis", interval: 5, location: "pot", note: "Robust, anspruchslos" },
+  { name: "Melisse (Beet)", type: "Melissa officinalis", interval: 7, location: "bed", note: "Im Beet alle 5-7 Tage" },
+  { name: "Oregano (Kübel)", type: "Origanum vulgare", interval: 10, location: "pot", note: "Mediterran, trocken verträglich" },
+  { name: "Oregano (Beet)", type: "Origanum vulgare", interval: 14, location: "bed", note: "Im Beet sehr anspruchslos" },
 
   // ── Blumen / Stauden ──
   { name: "Rose", type: "Rosa", interval: 7, location: "bed", note: "Tief und gründlich gießen, liebt Morgenguss" },
@@ -134,7 +149,12 @@ function getPlantByName(name) {
   );
 }
 
+// Make PLANT_DB available globally in browser
+if (typeof window !== 'undefined') {
+  window.PLANT_DB = PLANT_DB;
+}
+
 // Export für Module oder global
-if (typeof module !== 'undefined') {
+if (typeof module !== 'undefined' && module.exports) {
   module.exports = { PLANT_DB, searchPlants, getPlantByName };
 }

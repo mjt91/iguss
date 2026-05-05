@@ -302,7 +302,19 @@ form input, form select {
 
 .db-result-item:hover { background: #f0f7f4; }
 
+.db-result-item .db-result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+}
 .db-result-item .db-name { font-weight: 600; color: var(--green-dark); }
+.db-result-item .db-location-badge {
+  font-size: 0.9rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #e9ecef;
+}
 .db-result-item .db-type { color: #888; font-size: 0.8rem; }
 .db-result-item .db-note { color: #666; font-size: 0.8rem; margin-top: 2px; }
 
@@ -327,3 +339,32 @@ form input, form select {
 
 .db-divider::before { left: 0; }
 .db-divider::after { right: 0; }
+
+/* Section Header with Calendar Export */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.section-header h2 {
+  margin-bottom: 0;
+}
+
+.btn-small {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border: 1px solid var(--green);
+  color: var(--green);
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-small:hover {
+  background: var(--green);
+  color: white;
+}

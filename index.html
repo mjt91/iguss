@@ -32,7 +32,12 @@
 
     <!-- Tab: Meine Pflanzen -->
     <section id="plants" class="tab-content">
-      <h2>🪴 Alle Pflanzen</h2>
+      <div class="section-header">
+        <h2>🪴 Alle Pflanzen</h2>
+        <button id="export-calendar-btn" class="btn-secondary btn-small" onclick="exportCalendar()">
+          📅 Kalender-Export
+        </button>
+      </div>
       <div id="all-plants" class="plant-list">
         <p class="empty">Noch keine Pflanzen.</p>
       </div>
@@ -73,6 +78,7 @@
         <label>
           Zuletzt gegossen
           <input type="date" id="p-last-watered" required>
+          <script>document.getElementById('p-last-watered').value = new Date().toISOString().split('T')[0];</script>
         </label>
         <button type="submit" class="btn-primary">Speichern</button>
       </form>

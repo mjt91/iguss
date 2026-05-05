@@ -39,6 +39,102 @@ function locationLabel(loc) {
   return loc === 'indoor' ? 'Haus' : loc === 'pot' ? 'Kübel' : 'Beet';
 }
 
+// ── Calendar Export ───────────────────────────────────────
+function generateICS() {
+  const plants = loadPlants();
+  const now = new Date();
+  const timestamp = now.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+  
+  let icsContent = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//iGuss//Plant Watering Calendar//DE',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'X-WR-CALNAME:iGuss Gieß-Plan',
+    'X-WR-TIMEZONE:Europe/Berlin',
+    'X-WR-CALDESC:Automatisch generierter Gieß-Plan für deine Pflanzen'
+  ];
+  
+  const locationMap = {
+    'indoor': 'Im Haus',
+    'pot': 'Draußen im Kübel',
+    'bed': 'Im Beet'
+  };
+  
+  plants.forEach(plant => {
+    // Calculate next watering date
+    const lastWatered = new Date(plant.lastWatered);
+    const nextWater = new Date(lastWatered);
+    nextWater.setDate(lastWatered.getDate() + plant.interval);
+    
+    // If next water date is in the past, calculate from today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    while (nextWater < today) {
+      nextWater.setDate(nextWater.getDate() + plant.interval);
+    }
+    
+    // Create recurring events for the next 12 months
+    const endDate = new Date();
+    endDate.setMonth(endDate.getMonth() + 12);
+    
+    let currentDate = new Date(nextWater);
+    let eventCount = 0;
+    
+    while (currentDate < endDate && eventCount < 52) { // Max 52 events per plant
+      const dateStr = currentDate.toISOString().split('T')[0].replace(/-/g, '');
+      const uid = `${plant.id}-${dateStr}@iguss`;
+      
+      icsContent.push(
+        'BEGIN:VEVENT',
+        `UID:${uid}`,
+        `DTSTAMP:${timestamp}`,
+        `DTSTART;VALUE=DATE:${dateStr}`,
+        `DTEND;VALUE=DATE:${dateStr}`,
+        `SUMMARY:💧 ${plant.name} gießen`,
+        `DESCRIPTION:Pflanze: ${plant.name}${plant.type ? ' (' + plant.type + ')' : ''}\\nStandort: ${locationMap[plant.location]}\\nIntervall: Alle ${plant.interval} Tage\\nApp: iGuss`,
+        `LOCATION:${locationMap[plant.location]}`,
+        'BEGIN:VALARM',
+        'ACTION:DISPLAY',
+        `DESCRIPTION:Gieße ${plant.name}!`,
+        'TRIGGER:-PT2H', // 2 hours before
+        'END:VALARM',
+        'END:VEVENT'
+      );
+      
+      currentDate.setDate(currentDate.getDate() + plant.interval);
+      eventCount++;
+    }
+  });
+  
+  icsContent.push('END:VCALENDAR');
+  
+  return icsContent.join('\r\n');
+}
+
+function exportCalendar() {
+  const plants = loadPlants();
+  if (plants.length === 0) {
+    alert('Keine Pflanzen vorhanden. Füge zuerst Pflanzen hinzu!');
+    return;
+  }
+  
+  const icsContent = generateICS();
+  const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `iguss-giessplan-${todayStr()}.ics`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  
+  URL.revokeObjectURL(url);
+}
+
 // ── Tabs ─────────────────────────────────────────────────
 function initTabs() {
   document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -188,7 +284,7 @@ function initForms() {
     e.preventDefault();
     const plants = loadPlants();
     plants.push({
-      id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
+      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).substr(2, 9),
       name: document.getElementById('p-name').value.trim(),
       type: document.getElementById('p-type').value.trim(),
       location: document.getElementById('p-location').value,
@@ -283,11 +379,12 @@ document.addEventListener('DOMContentLoaded', () => {
       dbResults.innerHTML = hits.map(p => `
         <div class="db-result-item" data-name="${p.name}" data-type="${p.type}"
              data-interval="${p.interval}" data-location="${p.location}" data-note="${p.note || ''}">
-          <div>
+          <div class="db-result-header">
             <span class="db-name">${p.name}</span>
-            <span class="db-type">${p.type}</span>
+            <span class="db-location-badge">${locationIcon(p.location)}</span>
           </div>
-          <div class="db-note">💧 alle ${p.interval} Tage · ${locationLabel(p.location)}${p.note ? ' · ' + p.note : ''}</div>
+          <div class="db-type">${p.type}</div>
+          <div class="db-note"> alle ${p.interval} Tage · ${locationLabel(p.location)}${p.note ? ' · ' + p.note : ''}</div>
         </div>
       `).join('');
       dbResults.classList.add('active');
@@ -311,6 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+  initTabs();
   initForms();
   initPWA();
   render();
