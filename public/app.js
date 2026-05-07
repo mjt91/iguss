@@ -1,7 +1,6 @@
-// iGuss — Pflanzen Gieß-Plan App (localStorage + optional server backup)
+// iGuss — Pflanzen Gieß-Plan App (Browser only, localStorage)
 
 const STORAGE_KEY = 'iguss_plants';
-const BACKUP_KEY = 'iguss_backup_id';
 
 // ── Helpers ──────────────────────────────────────────────
 function loadPlants() {
@@ -38,143 +37,6 @@ function locationIcon(loc) {
 
 function locationLabel(loc) {
   return loc === 'indoor' ? 'Haus' : loc === 'pot' ? 'Kübel' : 'Beet';
-}
-
-// ── Backup & Sync ──────────────────────────────────────────
-async function backupToServer() {
-  const plants = loadPlants();
-  const backupId = localStorage.getItem(BACKUP_KEY) || generateBackupId();
-  
-  try {
-    const response = await fetch('/api/backup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ backupId, plants })
-    });
-    
-    if (response.ok) {
-      localStorage.setItem(BACKUP_KEY, backupId);
-      showNotification('💾 Backup erfolgreich!', 'success');
-      updateBackupStatus('Gesichert: ' + new Date().toLocaleString());
-    } else {
-      throw new Error('Backup failed');
-    }
-  } catch (err) {
-    console.error('Backup error:', err);
-    showNotification('❌ Backup fehlgeschlagen', 'error');
-    updateBackupStatus('Fehler beim Speichern');
-  }
-}
-
-async function restoreFromServer() {
-  const backupId = localStorage.getItem(BACKUP_KEY);
-  if (!backupId) {
-    showNotification('ℹ️ Kein Backup vorhanden', 'info');
-    return;
-  }
-  
-  if (!confirm('Dadurch werden deine aktuellen Daten überschrieben. Fortfahren?')) {
-    return;
-  }
-  
-  try {
-    const response = await fetch(`/api/backup/${backupId}`);
-    if (!response.ok) throw new Error('Restore failed');
-    
-    const data = await response.json();
-    if (data.plants && Array.isArray(data.plants)) {
-      savePlants(data.plants);
-      render();
-      showNotification('✅ Wiederherstellung erfolgreich!', 'success');
-      updateBackupStatus('Wiederhergestellt: ' + new Date().toLocaleString());
-    } else {
-      throw new Error('Invalid data');
-    }
-  } catch (err) {
-    console.error('Restore error:', err);
-    showNotification('❌ Wiederherstellung fehlgeschlagen', 'error');
-  }
-}
-
-async function exportBackupFile() {
-  const plants = loadPlants();
-  const data = {
-    version: 1,
-    exported: new Date().toISOString(),
-    plants: plants
-  };
-  
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `iguss-backup-${todayStr()}.json`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-  
-  showNotification('💾 Datei heruntergeladen!', 'success');
-}
-
-async function importBackupFile(file) {
-  try {
-    const text = await file.text();
-    const data = JSON.parse(text);
-    
-    if (!data.plants || !Array.isArray(data.plants)) {
-      throw new Error('Invalid backup file');
-    }
-    
-    if (confirm(`Soll das Backup vom ${new Date(data.exported).toLocaleString()} geladen werden?\n\nDadurch werden aktuelle Daten ersetzt!`)) {
-      savePlants(data.plants);
-      render();
-      showNotification('✅ Backup geladen!', 'success');
-    }
-  } catch (err) {
-    console.error('Import error:', err);
-    showNotification('❌ Ungültige Backup-Datei', 'error');
-  }
-}
-
-function generateBackupId() {
-  return 'iguss_' + Math.random().toString(36).substring(2, 15) + 
-         Math.random().toString(36).substring(2, 15);
-}
-
-function showNotification(message, type = 'info') {
-  const existing = document.querySelector('.notification');
-  if (existing) existing.remove();
-  
-  const notif = document.createElement('div');
-  notif.className = `notification notification-${type}`;
-  notif.textContent = message;
-  notif.style.cssText = `
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    padding: 12px 20px;
-    border-radius: 8px;
-    background: ${type === 'success' ? '#2d6a4f' : type === 'error' ? '#dc2626' : '#4b5563'};
-    color: white;
-    font-weight: 500;
-    z-index: 10000;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    animation: slideIn 0.3s ease;
-  `;
-  
-  document.body.appendChild(notif);
-  
-  setTimeout(() => {
-    notif.style.animation = 'fadeOut 0.3s ease';
-    setTimeout(() => notif.remove(), 300);
-  }, 3000);
-}
-
-function updateBackupStatus(text) {
-  const statusEl = document.getElementById('backup-status');
-  if (statusEl) statusEl.textContent = text;
 }
 
 // ── Calendar Export ───────────────────────────────────────
@@ -459,65 +321,14 @@ function initForms() {
   });
 }
 
-// ── Backup UI ─────────────────────────────────────────────
-function initBackupUI() {
-  // Create backup section in settings tab
-  const backupSection = document.getElementById('backup-section');
-  if (backupSection) {
-    backupSection.innerHTML = `
-      <div class="backup-panel">
-        <h3>💾 Datensicherung</h3>
-        <p class="backup-info">
-          Deine Pflanzen werden automatisch in diesem Browser gespeichert. 
-          Du kannst sie zusätzlich auf dem Server sichern oder als Datei exportieren.
-        </p>
-        <div class="backup-actions">
-          <button onclick="backupToServer()" class="btn-primary">
-            💾 Auf Server sichern
-          </button>
-          <button onclick="restoreFromServer()" class="btn-secondary">
-            📥 Von Server wiederherstellen
-          </button>
-          <button onclick="exportBackupFile()" class="btn-secondary">
-            📤 Als Datei exportieren
-          </button>
-        </div>
-        <div class="backup-file-import">
-          <label class="file-label">
-            📁 Backup-Datei importieren
-            <input type="file" id="backup-file-input" accept=".json" style="display: none;">
-          </label>
-        </div>
-        <div id="backup-status" class="backup-status"></div>
-      </div>
-    `;
-    
-    // File import handler
-    const fileInput = document.getElementById('backup-file-input');
-    if (fileInput) {
-      fileInput.addEventListener('change', (e) => {
-        if (e.target.files && e.target.files[0]) {
-          importBackupFile(e.target.files[0]);
-        }
-      });
-    }
-  }
-  
-  // Auto-backup on change (optional - can be disabled)
-  const originalSavePlants = savePlants;
-  savePlants = function(plants) {
-    originalSavePlants(plants);
-    // Uncomment to enable auto-backup:
-    // backupToServer();
-  };
-}
-
 // ── PWA / Install prompt ─────────────────────────────────
 function initPWA() {
+  // Register service worker
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(console.error);
   }
 
+  // Install prompt
   let deferredPrompt;
   window.addEventListener('beforeinstallprompt', e => {
     e.preventDefault();
@@ -587,6 +398,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
+    // Close on outside click
     document.addEventListener('click', e => {
       if (!dbSearch.contains(e.target) && !dbResults.contains(e.target)) {
         dbResults.classList.remove('active');
@@ -595,64 +407,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   initTabs();
   initForms();
-  initBackupUI();
   initPWA();
   render();
 });
-
-// Add CSS animations
-const style = document.createElement('style');
-style.textContent = `
-  @keyframes slideIn {
-    from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-  }
-  @keyframes fadeOut {
-    from { opacity: 1; }
-    to { opacity: 0; }
-  }
-  .backup-panel {
-    background: #f8f9fa;
-    padding: 20px;
-    border-radius: 12px;
-    margin-top: 20px;
-  }
-  .backup-panel h3 {
-    margin-top: 0;
-    color: #2d6a4f;
-  }
-  .backup-info {
-    color: #666;
-    margin-bottom: 16px;
-  }
-  .backup-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 16px;
-  }
-  .backup-file-import {
-    margin-top: 10px;
-  }
-  .file-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    background: white;
-    border: 2px dashed #2d6a4f;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .file-label:hover {
-    background: #e8f5e9;
-  }
-  .backup-status {
-    margin-top: 12px;
-    font-size: 14px;
-    color: #666;
-    min-height: 20px;
-  }
-`;
-document.head.appendChild(style);
