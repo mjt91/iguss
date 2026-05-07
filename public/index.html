@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>iGuss — Pflanzen Gieß-Plan</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="/style.css">
+  <meta name="theme-color" content="#2d6a4f">
+  <script src="/plants-db.js"></script>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>🌿 iGuss</h1>
+      <p>Dein Pflanzen Gieß-Plan</p>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="today">Heute</button>
+      <button class="tab-btn" data-tab="plants">Meine Pflanzen</button>
+      <button class="tab-btn" data-tab="add">+ Hinzufügen</button>
+      <button class="tab-btn" data-tab="settings">⚙️</button>
+    </nav>
+
+    <!-- Tab: Heute -->
+    <section id="today" class="tab-content active">
+      <h2>🚿 Heute gießen</h2>
+      <div id="today-list" class="plant-list">
+        <p class="empty">Lade...</p>
+      </div>
+    </section>
+
+    <!-- Tab: Meine Pflanzen -->
+    <section id="plants" class="tab-content">
+      <div class="section-header">
+        <h2>🪴 Alle Pflanzen</h2>
+        <button id="export-calendar-btn" class="btn-secondary btn-small" onclick="exportCalendar()">
+          📅 Kalender-Export
+        </button>
+      </div>
+      <div id="all-plants" class="plant-list">
+        <p class="empty">Noch keine Pflanzen.</p>
+      </div>
+    </section>
+
+    <!-- Tab: Hinzufügen -->
+    <section id="add" class="tab-content">
+      <h2>➕ Neue Pflanze</h2>
+      <div id="db-search-box">
+        <label>
+          🔍 Aus Datenbank wählen (optional)
+          <input type="text" id="p-db-search" placeholder="z.B. Tomate, Rose, Basilikum..." autocomplete="off">
+        </label>
+        <div id="db-results" class="db-results"></div>
+      </div>
+      <form id="plant-form">
+        <label>
+          Name
+          <input type="text" id="p-name" placeholder="z.B. Monstera" required>
+        </label>
+        <label>
+          Art
+          <input type="text" id="p-type" placeholder="z.B. Monstera deliciosa">
+        </label>
+        <label>
+          Standort
+          <select id="p-location" required>
+            <option value="">Wählen...</option>
+            <option value="indoor">🏠 Im Haus</option>
+            <option value="pot">🪴 Draußen im Kübel</option>
+            <option value="bed">🌱 Im Beet</option>
+          </select>
+        </label>
+        <label>
+          Gieß-Intervall (Tage)
+          <input type="number" id="p-interval" min="1" value="7" required>
+        </label>
+        <label>
+          Zuletzt gegossen
+          <input type="date" id="p-last-watered" required>
+          <script>document.getElementById('p-last-watered').value = new Date().toISOString().split('T')[0];</script>
+        </label>
+        <button type="submit" class="btn-primary">Speichern</button>
+      </form>
+    </section>
+
+    <!-- Tab: Einstellungen -->
+    <section id="settings" class="tab-content">
+      <h2>⚙️ Einstellungen</h2>
+      <div id="backup-section"></div>
+    </section>
+  </div>
+
+  <!-- Edit Modal -->
+  <div id="edit-modal" class="modal">
+    <div class="modal-content">
+      <h3>✏️ Pflanze bearbeiten</h3>
+      <form id="edit-form">
+        <input type="hidden" id="e-id">
+        <label>Name <input type="text" id="e-name" required></label>
+        <label>Art <input type="text" id="e-type"></label>
+        <label>Standort
+          <select id="e-location" required>
+            <option value="indoor">🏠 Im Haus</option>
+            <option value="pot">🪴 Draußen im Kübel</option>
+            <option value="bed">🌱 Im Beet</option>
+          </select>
+        </label>
+        <label>Intervall (Tage) <input type="number" id="e-interval" min="1" required></label>
+        <label>Zuletzt gegossen <input type="date" id="e-last-watered" required></label>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" onclick="closeModal()">Abbrechen</button>
+          <button type="submit" class="btn-primary">Speichern</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
