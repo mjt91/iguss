@@ -44,3 +44,4 @@ This app runs with [ONCE](https://github.com/basecamp/once):
 ## Data Isolation
 
 Each user has completely isolated data through browser localStorage. Data is not stored on the server.
+
