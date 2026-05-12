@@ -76,37 +76,30 @@ function generateICS() {
       nextWater.setDate(nextWater.getDate() + plant.interval);
     }
     
-    // Create recurring events for the next 12 months
-    const endDate = new Date();
-    endDate.setMonth(endDate.getMonth() + 12);
-    
-    let currentDate = new Date(nextWater);
-    let eventCount = 0;
-    
-    while (currentDate < endDate && eventCount < 52) { // Max 52 events per plant
-      const dateStr = currentDate.toISOString().split('T')[0].replace(/-/g, '');
-      const uid = `${plant.id}-${dateStr}@iguss`;
-      
-      icsContent.push(
-        'BEGIN:VEVENT',
-        `UID:${uid}`,
-        `DTSTAMP:${timestamp}`,
-        `DTSTART;VALUE=DATE:${dateStr}`,
-        `DTEND;VALUE=DATE:${dateStr}`,
-        `SUMMARY:💧 ${plant.name} gießen`,
-        `DESCRIPTION:Pflanze: ${plant.name}${plant.type ? ' (' + plant.type + ')' : ''}\\nStandort: ${locationMap[plant.location]}\\nIntervall: Alle ${plant.interval} Tage\\nApp: iGuss`,
-        `LOCATION:${locationMap[plant.location]}`,
-        'BEGIN:VALARM',
-        'ACTION:DISPLAY',
-        `DESCRIPTION:Gieße ${plant.name}!`,
-        'TRIGGER:-PT2H', // 2 hours before
-        'END:VALARM',
-        'END:VEVENT'
-      );
-      
-      currentDate.setDate(currentDate.getDate() + plant.interval);
-      eventCount++;
-    }
+    // Recurring event series for the next 12 months
+    const startDateStr = nextWater.toISOString().split('T')[0].replace(/-/g, '');
+    const untilDate = new Date(nextWater);
+    untilDate.setFullYear(untilDate.getFullYear() + 1);
+    const untilStr = untilDate.toISOString().split('T')[0].replace(/-/g, '');
+    const uid = `${plant.id}-${startDateStr}@iguss`;
+
+    icsContent.push(
+      'BEGIN:VEVENT',
+      `UID:${uid}`,
+      `DTSTAMP:${timestamp}`,
+      `DTSTART;VALUE=DATE:${startDateStr}`,
+      `DTEND;VALUE=DATE:${startDateStr}`,
+      `RRULE:FREQ=DAILY;INTERVAL=${plant.interval};UNTIL=${untilStr}`,
+      `SUMMARY:💧 ${plant.name} gießen`,
+      `DESCRIPTION:Pflanze: ${plant.name}${plant.type ? ' (' + plant.type + ')' : ''}\\nStandort: ${locationMap[plant.location]}\\nIntervall: Alle ${plant.interval} Tage\\nApp: iGuss`,
+      `LOCATION:${locationMap[plant.location]}`,
+      'BEGIN:VALARM',
+      'ACTION:DISPLAY',
+      `DESCRIPTION:Gieße ${plant.name}!`,
+      'TRIGGER:-PT2H',
+      'END:VALARM',
+      'END:VEVENT'
+    );
   });
   
   icsContent.push('END:VCALENDAR');
