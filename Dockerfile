@@ -4,7 +4,7 @@
 # - Healthcheck endpoint at /up
 # - Persistent data in /storage
 
-FROM node:20-alpine
+FROM node:26-alpine
 
 # Create app directory
 WORKDIR /app
