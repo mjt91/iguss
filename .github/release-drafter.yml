@@ -1,0 +1,63 @@
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+categories:
+  - title: '🚀 Features'
+    labels:
+      - 'feature'
+      - 'enhancement'
+  - title: '🐛 Bug Fixes'
+    labels:
+      - 'fix'
+      - 'bug'
+  - title: '🧰 Maintenance'
+    labels:
+      - 'chore'
+      - 'ci'
+      - 'documentation'
+change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+change-title-escapes: '\<*_&'
+version-resolver:
+  major:
+    labels:
+      - 'major'
+  minor:
+    labels:
+      - 'minor'
+      - 'feature'
+      - 'enhancement'
+  patch:
+    labels:
+      - 'patch'
+      - 'fix'
+      - 'bug'
+  default: patch
+autolabeler:
+  - label: 'feature'
+    branch:
+      - '/^feat(ure)?[/-].+/'
+    title:
+      - '/^feat(ure)?[(:].+/i'
+  - label: 'fix'
+    branch:
+      - '/^(fix|bugfix|hotfix)[/-].+/'
+    title:
+      - '/^(fix|bugfix)[(:].+/i'
+  - label: 'chore'
+    branch:
+      - '/^chore[/-].+/'
+    title:
+      - '/^chore[(:].+/i'
+  - label: 'ci'
+    branch:
+      - '/^ci[/-].+/'
+    title:
+      - '/^ci[(:].+/i'
+  - label: 'documentation'
+    branch:
+      - '/^docs?[/-].+/'
+    title:
+      - '/^docs?[(:].+/i'
+template: |
+  ## Changes
+
+  $CHANGES
