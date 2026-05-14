@@ -277,14 +277,58 @@ form input, form select {
 }
 
 /* DB Search */
-#db-search-box { margin-bottom: 20px; }
+#db-search-box {
+  margin-bottom: 20px;
+  padding: 18px;
+  background: linear-gradient(135deg, #f0f7f4 0%, #e8f3ed 100%);
+  border: 1px solid #d4e8dc;
+  border-radius: 12px;
+}
+
+.db-search-hint {
+  font-size: 0.9rem;
+  color: var(--green-dark);
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+.db-search-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.db-search-icon {
+  position: absolute;
+  left: 14px;
+  font-size: 1.1rem;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+#p-db-search {
+  width: 100%;
+  padding: 16px 16px 16px 44px;
+  font-size: 1.05rem;
+  border: 2px solid var(--green-light);
+  border-radius: 10px;
+  background: white;
+  box-shadow: var(--shadow);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+#p-db-search:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.15);
+}
 
 .db-results {
-  max-height: 200px;
+  max-height: 240px;
   overflow-y: auto;
   border: 1px solid #ddd;
   border-radius: 8px;
-  margin-top: 8px;
+  margin-top: 10px;
   background: white;
   display: none;
 }
