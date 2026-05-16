@@ -47,12 +47,14 @@
     <section id="add" class="tab-content">
       <h2>➕ Neue Pflanze</h2>
       <div id="db-search-box">
-        <label>
-          🔍 Aus Datenbank wählen (optional)
-          <input type="text" id="p-db-search" placeholder="z.B. Tomate, Rose, Basilikum..." autocomplete="off">
-        </label>
+        <p class="db-search-hint">Suche zuerst in unserer Pflanzen-Datenbank — wir füllen den Rest für dich aus.</p>
+        <div class="db-search-field">
+          <span class="db-search-icon" aria-hidden="true">🔍</span>
+          <input type="text" id="p-db-search" placeholder="z.B. Tomate, Rose, Basilikum..." autocomplete="off" aria-label="Pflanze in Datenbank suchen">
+        </div>
         <div id="db-results" class="db-results"></div>
       </div>
+      <div class="db-divider">oder manuell eingeben</div>
       <form id="plant-form">
         <label>
           Name
