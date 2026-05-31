@@ -2,6 +2,8 @@
 
 A simple plant watering tracker - hosted with [ONCE](https://github.com/basecamp/once).
 
+[![Build and publish Docker image](https://github.com/mjt91/iguss/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/mjt91/iguss/actions/workflows/docker-publish.yml)
+
 ## Features
 
 - 🌱 Manage plants with watering intervals
