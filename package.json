@@ -1,6 +1,6 @@
 {
   "name": "iguss",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "iGuss - Pflanzen Gieß-Plan App (ONCE-compatible)",
   "main": "server.js",
   "scripts": {

@@ -10,6 +10,20 @@ A simple plant watering tracker - hosted with [ONCE](https://github.com/basecamp
 - 💾 Data stored in browser (localStorage)
 - 📱 PWA support (installable as app)
 
+## Run from GHCR
+
+Pre-built multi-arch images (linux/amd64, linux/arm64) are published to
+GitHub Container Registry on every release:
+
+```bash
+docker pull ghcr.io/mjt91/iguss:latest
+docker run -d -p 8080:80 --name iguss ghcr.io/mjt91/iguss:latest
+
+# App available at: http://localhost:8080
+```
+
+Pin to a specific version with `ghcr.io/mjt91/iguss:1.0.1` (also `:1.0`, `:1`).
+
 ## Local Development
 
 ### With Docker
