@@ -1,4 +1,4 @@
-// iGuss — Pflanzen Gieß-Plan App (Browser only, localStorage)
+// iGuss — Pflanzen Gieß-Plan App
 
 const STORAGE_KEY = 'iguss_plants';
 
@@ -63,10 +63,12 @@ function generateICS() {
   };
   
   plants.forEach(plant => {
+    // Calculate next watering date
     const lastWatered = new Date(plant.lastWatered);
     const nextWater = new Date(lastWatered);
     nextWater.setDate(lastWatered.getDate() + plant.interval);
     
+    // If next water date is in the past, calculate from today
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -74,36 +76,30 @@ function generateICS() {
       nextWater.setDate(nextWater.getDate() + plant.interval);
     }
     
-    const endDate = new Date();
-    endDate.setMonth(endDate.getMonth() + 12);
-    
-    let currentDate = new Date(nextWater);
-    let eventCount = 0;
-    
-    while (currentDate < endDate && eventCount < 52) {
-      const dateStr = currentDate.toISOString().split('T')[0].replace(/-/g, '');
-      const uid = `${plant.id}-${dateStr}@iguss`;
-      
-      icsContent.push(
-        'BEGIN:VEVENT',
-        `UID:${uid}`,
-        `DTSTAMP:${timestamp}`,
-        `DTSTART;VALUE=DATE:${dateStr}`,
-        `DTEND;VALUE=DATE:${dateStr}`,
-        `SUMMARY:💧 ${plant.name} gießen`,
-        `DESCRIPTION:Pflanze: ${plant.name}${plant.type ? ' (' + plant.type + ')' : ''}\\nStandort: ${locationMap[plant.location]}\\nIntervall: Alle ${plant.interval} Tage\\nApp: iGuss`,
-        `LOCATION:${locationMap[plant.location]}`,
-        'BEGIN:VALARM',
-        'ACTION:DISPLAY',
-        `DESCRIPTION:Gieße ${plant.name}!`,
-        'TRIGGER:-PT2H',
-        'END:VALARM',
-        'END:VEVENT'
-      );
-      
-      currentDate.setDate(currentDate.getDate() + plant.interval);
-      eventCount++;
-    }
+    // Recurring event series for the next 12 months
+    const startDateStr = nextWater.toISOString().split('T')[0].replace(/-/g, '');
+    const untilDate = new Date(nextWater);
+    untilDate.setFullYear(untilDate.getFullYear() + 1);
+    const untilStr = untilDate.toISOString().split('T')[0].replace(/-/g, '');
+    const uid = `${plant.id}-${startDateStr}@iguss`;
+
+    icsContent.push(
+      'BEGIN:VEVENT',
+      `UID:${uid}`,
+      `DTSTAMP:${timestamp}`,
+      `DTSTART;VALUE=DATE:${startDateStr}`,
+      `DTEND;VALUE=DATE:${startDateStr}`,
+      `RRULE:FREQ=DAILY;INTERVAL=${plant.interval};UNTIL=${untilStr}`,
+      `SUMMARY:💧 ${plant.name} gießen`,
+      `DESCRIPTION:Pflanze: ${plant.name}${plant.type ? ' (' + plant.type + ')' : ''}\\nStandort: ${locationMap[plant.location]}\\nIntervall: Alle ${plant.interval} Tage\\nApp: iGuss`,
+      `LOCATION:${locationMap[plant.location]}`,
+      'BEGIN:VALARM',
+      'ACTION:DISPLAY',
+      `DESCRIPTION:Gieße ${plant.name}!`,
+      'TRIGGER:-PT2H',
+      'END:VALARM',
+      'END:VEVENT'
+    );
   });
   
   icsContent.push('END:VCALENDAR');
@@ -171,7 +167,7 @@ function renderToday(plants) {
 function renderAll(plants) {
   const list = document.getElementById('all-plants');
   if (plants.length === 0) {
-    list.innerHTML = '<p class="empty">Noch keine Pflanzen. Gehe auf „Hinzufügen"!</p>';
+    list.innerHTML = '<p class="empty">Noch keine Pflanzen. Gehe auf „Hinzufügen“!</p>';
     return;
   }
 
