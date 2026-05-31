@@ -1,6 +1,6 @@
 // iGuss Service Worker — stale-while-revalidate for fresh content
 
-const CACHE_NAME = 'iguss-v3';
+const CACHE_NAME = 'iguss-v4';
 const ASSETS = [
   './index.html',
   './style.css',

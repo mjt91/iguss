@@ -82,6 +82,23 @@
           <input type="date" id="p-last-watered" required>
           <script>document.getElementById('p-last-watered').value = new Date().toISOString().split('T')[0];</script>
         </label>
+
+        <fieldset class="fert-fieldset">
+          <legend>🌿 Düngen (optional)</legend>
+          <label>
+            Dünge-Intervall (Tage)
+            <input type="number" id="p-fert-interval" min="1" placeholder="z.B. 14 — leer lassen, wenn nicht relevant">
+          </label>
+          <label>
+            Zuletzt gedüngt
+            <input type="date" id="p-last-fertilized">
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="p-fert-export" checked>
+            📅 Im Kalender-Export einschließen
+          </label>
+        </fieldset>
+
         <button type="submit" class="btn-primary">Speichern</button>
       </form>
     </section>
@@ -104,6 +121,14 @@
         </label>
         <label>Intervall (Tage) <input type="number" id="e-interval" min="1" required></label>
         <label>Zuletzt gegossen <input type="date" id="e-last-watered" required></label>
+
+        <fieldset class="fert-fieldset">
+          <legend>🌿 Düngen (optional)</legend>
+          <label>Dünge-Intervall (Tage) <input type="number" id="e-fert-interval" min="1" placeholder="leer = aus"></label>
+          <label>Zuletzt gedüngt <input type="date" id="e-last-fertilized"></label>
+          <label class="checkbox-label"><input type="checkbox" id="e-fert-export"> 📅 Im Kalender-Export einschließen</label>
+        </fieldset>
+
         <div class="modal-actions">
           <button type="button" class="btn-secondary" onclick="closeModal()">Abbrechen</button>
           <button type="submit" class="btn-primary">Speichern</button>

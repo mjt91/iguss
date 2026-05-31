@@ -31,6 +31,15 @@ function daysUntilWater(plant) {
   return plant.interval - passed;
 }
 
+function daysUntilFertilize(plant) {
+  if (!plant.fertilizeInterval || !plant.lastFertilized) return null;
+  return plant.fertilizeInterval - daysSince(plant.lastFertilized);
+}
+
+function fertExportEnabled(plant) {
+  return !!plant.fertilizeInterval && plant.includeFertilizerInExport !== false;
+}
+
 function locationIcon(loc) {
   return loc === 'indoor' ? '🏠' : loc === 'pot' ? '🪴' : '🌱';
 }
@@ -51,9 +60,9 @@ function generateICS() {
     'PRODID:-//iGuss//Plant Watering Calendar//DE',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
-    'X-WR-CALNAME:iGuss Gieß-Plan',
+    'X-WR-CALNAME:iGuss Gieß- & Düngeplan',
     'X-WR-TIMEZONE:Europe/Berlin',
-    'X-WR-CALDESC:Automatisch generierter Gieß-Plan für deine Pflanzen'
+    'X-WR-CALDESC:Automatisch generierter Gieß- und Düngeplan für deine Pflanzen'
   ];
   
   const locationMap = {
@@ -100,6 +109,38 @@ function generateICS() {
       'END:VALARM',
       'END:VEVENT'
     );
+
+    if (fertExportEnabled(plant)) {
+      const lastFert = plant.lastFertilized ? new Date(plant.lastFertilized) : new Date();
+      const nextFert = new Date(lastFert);
+      nextFert.setDate(lastFert.getDate() + plant.fertilizeInterval);
+      while (nextFert < today) {
+        nextFert.setDate(nextFert.getDate() + plant.fertilizeInterval);
+      }
+      const fertStartStr = nextFert.toISOString().split('T')[0].replace(/-/g, '');
+      const fertUntilDate = new Date(nextFert);
+      fertUntilDate.setFullYear(fertUntilDate.getFullYear() + 1);
+      const fertUntilStr = fertUntilDate.toISOString().split('T')[0].replace(/-/g, '');
+      const fertUid = `${plant.id}-fert-${fertStartStr}@iguss`;
+
+      icsContent.push(
+        'BEGIN:VEVENT',
+        `UID:${fertUid}`,
+        `DTSTAMP:${timestamp}`,
+        `DTSTART;VALUE=DATE:${fertStartStr}`,
+        `DTEND;VALUE=DATE:${fertStartStr}`,
+        `RRULE:FREQ=DAILY;INTERVAL=${plant.fertilizeInterval};UNTIL=${fertUntilStr}`,
+        `SUMMARY:🌿 ${plant.name} düngen`,
+        `DESCRIPTION:Pflanze: ${plant.name}${plant.type ? ' (' + plant.type + ')' : ''}\\nStandort: ${locationMap[plant.location]}\\nDünge-Intervall: Alle ${plant.fertilizeInterval} Tage\\nApp: iGuss`,
+        `LOCATION:${locationMap[plant.location]}`,
+        'BEGIN:VALARM',
+        'ACTION:DISPLAY',
+        `DESCRIPTION:Dünge ${plant.name}!`,
+        'TRIGGER:-PT2H',
+        'END:VALARM',
+        'END:VEVENT'
+      );
+    }
   });
   
   icsContent.push('END:VCALENDAR');
@@ -148,15 +189,28 @@ function render() {
   renderAll(plants);
 }
 
+function enrich(plants) {
+  return plants.map(p => ({
+    ...p,
+    daysUntil: daysUntilWater(p),
+    daysUntilFert: daysUntilFertilize(p),
+  }));
+}
+
+function urgencySort(a, b) {
+  const aMin = Math.min(a.daysUntil, a.daysUntilFert ?? Infinity);
+  const bMin = Math.min(b.daysUntil, b.daysUntilFert ?? Infinity);
+  return aMin - bMin;
+}
+
 function renderToday(plants) {
   const list = document.getElementById('today-list');
-  const due = plants
-    .map(p => ({ ...p, daysUntil: daysUntilWater(p) }))
-    .filter(p => p.daysUntil <= 0)
-    .sort((a, b) => a.daysUntil - b.daysUntil);
+  const due = enrich(plants)
+    .filter(p => p.daysUntil <= 0 || (p.daysUntilFert !== null && p.daysUntilFert <= 0))
+    .sort(urgencySort);
 
   if (due.length === 0) {
-    list.innerHTML = '<p class="empty">🎉 Alles versorgt! Keine Pflanzen müssen heute gegossen werden.</p>';
+    list.innerHTML = '<p class="empty">🎉 Alles versorgt! Keine Pflanzen müssen heute gegossen oder gedüngt werden.</p>';
     return;
   }
 
@@ -171,10 +225,7 @@ function renderAll(plants) {
     return;
   }
 
-  const sorted = plants
-    .map(p => ({ ...p, daysUntil: daysUntilWater(p) }))
-    .sort((a, b) => a.daysUntil - b.daysUntil);
-
+  const sorted = enrich(plants).sort(urgencySort);
   list.innerHTML = sorted.map(p => plantCard(p, false)).join('');
   attachCardListeners();
 }
@@ -198,6 +249,19 @@ function plantCard(p, isToday) {
     statusText = `<span class="due-text">in ${days} Tagen</span>`;
   }
 
+  let fertLine = '';
+  let fertBtn = '';
+  if (p.daysUntilFert !== null && p.daysUntilFert !== undefined) {
+    const fd = p.daysUntilFert;
+    let fertText;
+    if (fd < 0) fertText = `${Math.abs(fd)} Tag${Math.abs(fd) !== 1 ? 'e' : ''} überfällig`;
+    else if (fd === 0) fertText = 'heute fällig';
+    else if (fd === 1) fertText = 'morgen fällig';
+    else fertText = `in ${fd} Tagen`;
+    fertLine = `<span class="fert-line">🌿 Düngen: ${fertText} · alle ${p.fertilizeInterval} Tage</span>`;
+    fertBtn = `<button class="fertilize-btn" data-id="${p.id}">🌿 Gedüngt</button>`;
+  }
+
   return `
     <div class="plant-card ${statusClass}" data-id="${p.id}">
       <div class="plant-header">
@@ -208,8 +272,11 @@ function plantCard(p, isToday) {
         <span class="plant-location">${locationIcon(p.location)} ${locationLabel(p.location)}</span>
       </div>
       <div class="plant-info">
-        <div class="plant-status">${statusText} · alle ${p.interval} Tage</div>
-        <button class="water-btn" data-id="${p.id}">💧 Gegossen</button>
+        <div class="plant-status">${statusText} · alle ${p.interval} Tage${fertLine}</div>
+        <div class="plant-actions">
+          <button class="water-btn" data-id="${p.id}">💧 Gegossen</button>
+          ${fertBtn}
+        </div>
       </div>
       ${!isToday ? `
         <div class="card-actions">
@@ -225,6 +292,9 @@ function attachCardListeners() {
   document.querySelectorAll('.water-btn').forEach(btn => {
     btn.addEventListener('click', () => waterPlant(btn.dataset.id));
   });
+  document.querySelectorAll('.fertilize-btn').forEach(btn => {
+    btn.addEventListener('click', () => fertilizePlant(btn.dataset.id));
+  });
   document.querySelectorAll('.edit-btn').forEach(btn => {
     btn.addEventListener('click', () => openEdit(btn.dataset.id));
   });
@@ -239,6 +309,15 @@ function waterPlant(id) {
   const p = plants.find(x => x.id === id);
   if (!p) return;
   p.lastWatered = todayStr();
+  savePlants(plants);
+  render();
+}
+
+function fertilizePlant(id) {
+  const plants = loadPlants();
+  const p = plants.find(x => x.id === id);
+  if (!p) return;
+  p.lastFertilized = todayStr();
   savePlants(plants);
   render();
 }
@@ -262,6 +341,9 @@ function openEdit(id) {
   document.getElementById('e-location').value = p.location;
   document.getElementById('e-interval').value = p.interval;
   document.getElementById('e-last-watered').value = p.lastWatered;
+  document.getElementById('e-fert-interval').value = p.fertilizeInterval || '';
+  document.getElementById('e-last-fertilized').value = p.lastFertilized || '';
+  document.getElementById('e-fert-export').checked = p.includeFertilizerInExport !== false;
 
   document.getElementById('edit-modal').classList.add('active');
 }
@@ -276,18 +358,26 @@ function initForms() {
   document.getElementById('plant-form').addEventListener('submit', e => {
     e.preventDefault();
     const plants = loadPlants();
-    plants.push({
+    const fertIntervalRaw = document.getElementById('p-fert-interval').value;
+    const newPlant = {
       id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).substr(2, 9),
       name: document.getElementById('p-name').value.trim(),
       type: document.getElementById('p-type').value.trim(),
       location: document.getElementById('p-location').value,
       interval: parseInt(document.getElementById('p-interval').value),
       lastWatered: document.getElementById('p-last-watered').value,
-    });
+    };
+    if (fertIntervalRaw) {
+      newPlant.fertilizeInterval = parseInt(fertIntervalRaw);
+      newPlant.lastFertilized = document.getElementById('p-last-fertilized').value || todayStr();
+      newPlant.includeFertilizerInExport = document.getElementById('p-fert-export').checked;
+    }
+    plants.push(newPlant);
     savePlants(plants);
     e.target.reset();
     document.getElementById('p-last-watered').value = todayStr();
-    
+    document.getElementById('p-fert-export').checked = true;
+
     // Switch to "Today" tab
     document.querySelector('[data-tab="today"]').click();
   });
@@ -305,6 +395,17 @@ function initForms() {
     p.location = document.getElementById('e-location').value;
     p.interval = parseInt(document.getElementById('e-interval').value);
     p.lastWatered = document.getElementById('e-last-watered').value;
+
+    const fertIntervalRaw = document.getElementById('e-fert-interval').value;
+    if (fertIntervalRaw) {
+      p.fertilizeInterval = parseInt(fertIntervalRaw);
+      p.lastFertilized = document.getElementById('e-last-fertilized').value || todayStr();
+      p.includeFertilizerInExport = document.getElementById('e-fert-export').checked;
+    } else {
+      delete p.fertilizeInterval;
+      delete p.lastFertilized;
+      delete p.includeFertilizerInExport;
+    }
 
     savePlants(plants);
     closeModal();
