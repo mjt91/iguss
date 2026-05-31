@@ -1,6 +1,6 @@
 // iGuss Service Worker — stale-while-revalidate for fresh content
 
-const CACHE_NAME = 'iguss-v4';
+const CACHE_NAME = 'iguss-v5';
 const ASSETS = [
   './index.html',
   './style.css',
@@ -17,6 +17,10 @@ self.addEventListener('install', e => {
 });
 
 self.addEventListener('fetch', e => {
+  // Always go to network for live endpoints; never cache them.
+  const url = new URL(e.request.url);
+  if (url.pathname === '/version' || url.pathname === '/up') return;
+
   e.respondWith(
     caches.match(e.request).then(cachedResponse => {
       // Always fetch in background to update cache

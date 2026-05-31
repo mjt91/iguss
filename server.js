@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 const PORT = 80;
+const APP_VERSION = require('./package.json').version;
 
 // MIME types
 const mimeTypes = {
@@ -36,6 +37,13 @@ const server = http.createServer((req, res) => {
   if (pathname === '/up') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ status: 'ok', timestamp: new Date().toISOString() }));
+    return;
+  }
+
+  // App version endpoint — read at server start from package.json
+  if (pathname === '/version') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ version: APP_VERSION }));
     return;
   }
 

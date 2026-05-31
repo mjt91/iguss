@@ -452,6 +452,18 @@ function initPWA() {
   }
 }
 
+// ── Version badge ────────────────────────────────────────
+function initVersion() {
+  const el = document.getElementById('app-version');
+  if (!el) return;
+  fetch('/version')
+    .then(r => r.ok ? r.json() : null)
+    .then(data => {
+      if (data && data.version) el.textContent = 'v' + data.version;
+    })
+    .catch(() => {});
+}
+
 // ── Init ─────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   // DB Search
@@ -505,5 +517,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initTabs();
   initForms();
   initPWA();
+  initVersion();
   render();
 });
