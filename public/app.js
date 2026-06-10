@@ -352,11 +352,68 @@ function closeModal() {
   document.getElementById('edit-modal').classList.remove('active');
 }
 
+// ── Form Validation ──────────────────────────────────────
+function validateName(val) {
+  return val.trim() ? '' : 'Name darf nicht leer sein';
+}
+function validateInterval(val) {
+  const n = parseInt(val);
+  return (!isNaN(n) && n >= 1) ? '' : 'Intervall muss mindestens 1 sein';
+}
+function validateLastWatered(val) {
+  if (!val) return 'Datum erforderlich';
+  const d = new Date(val);
+  const today = new Date();
+  today.setHours(23, 59, 59, 999);
+  return d > today ? 'Datum liegt in der Zukunft (nur Warnung)' : '';
+}
+function setFieldError(inputId, errorId, msg) {
+  const input = document.getElementById(inputId);
+  const err = document.getElementById(errorId);
+  err.textContent = msg;
+  input.classList.toggle('field-error', !!msg);
+  err.classList.toggle('warning', msg && msg.includes('Warnung'));
+  input.classList.toggle('field-warning', msg && msg.includes('Warnung'));
+}
+function clearFieldErrors() {
+  ['add-name-error', 'add-interval-error', 'add-water-error',
+   'e-name-error', 'e-interval-error', 'e-water-error'].forEach(id => {
+    const err = document.getElementById(id);
+    if (err) err.textContent = '';
+  });
+  document.querySelectorAll('.field-error, .field-warning').forEach(el => {
+    el.classList.remove('field-error', 'field-warning');
+  });
+}
+function validateAddForm() {
+  const nameErr = validateName(document.getElementById('p-name').value);
+  const intErr = validateInterval(document.getElementById('p-interval').value);
+  const watErr = validateLastWatered(document.getElementById('p-last-watered').value);
+  setFieldError('p-name', 'add-name-error', nameErr);
+  setFieldError('p-interval', 'add-interval-error', intErr);
+  setFieldError('p-last-watered', 'add-water-error', watErr);
+  const ok = !nameErr && !intErr;
+  document.getElementById('p-submit').disabled = !ok;
+  return ok;
+}
+function validateEditForm() {
+  const nameErr = validateName(document.getElementById('e-name').value);
+  const intErr = validateInterval(document.getElementById('e-interval').value);
+  const watErr = validateLastWatered(document.getElementById('e-last-watered').value);
+  setFieldError('e-name', 'e-name-error', nameErr);
+  setFieldError('e-interval', 'e-interval-error', intErr);
+  setFieldError('e-last-watered', 'e-water-error', watErr);
+  const ok = !nameErr && !intErr;
+  document.getElementById('e-submit').disabled = !ok;
+  return ok;
+}
+
 // ── Forms ────────────────────────────────────────────────
 function initForms() {
   // Add form
   document.getElementById('plant-form').addEventListener('submit', e => {
     e.preventDefault();
+    if (!validateAddForm()) return;
     const plants = loadPlants();
     const fertIntervalRaw = document.getElementById('p-fert-interval').value;
     const newPlant = {
@@ -377,6 +434,8 @@ function initForms() {
     e.target.reset();
     document.getElementById('p-last-watered').value = todayStr();
     document.getElementById('p-fert-export').checked = true;
+    clearFieldErrors();
+    document.getElementById('p-submit').disabled = false;
 
     // Switch to "Today" tab
     document.querySelector('[data-tab="today"]').click();
@@ -385,6 +444,7 @@ function initForms() {
   // Edit form
   document.getElementById('edit-form').addEventListener('submit', e => {
     e.preventDefault();
+    if (!validateEditForm()) return;
     const plants = loadPlants();
     const id = document.getElementById('e-id').value;
     const p = plants.find(x => x.id === id);
@@ -416,6 +476,30 @@ function initForms() {
   document.getElementById('edit-modal').addEventListener('click', e => {
     if (e.target === document.getElementById('edit-modal')) closeModal();
   });
+
+  // Blur validation on add form fields
+  document.getElementById('p-name').addEventListener('blur', validateAddForm);
+  document.getElementById('p-interval').addEventListener('blur', validateAddForm);
+  document.getElementById('p-last-watered').addEventListener('blur', validateAddForm);
+
+  // Blur validation on edit form fields
+  document.getElementById('e-name').addEventListener('blur', validateEditForm);
+  document.getElementById('e-interval').addEventListener('blur', validateEditForm);
+  document.getElementById('e-last-watered').addEventListener('blur', validateEditForm);
+
+  // Clear validation on edit modal open/close
+  const origOpenEdit = openEdit;
+  openEdit = function(id) {
+    clearFieldErrors();
+    document.getElementById('e-submit').disabled = false;
+    origOpenEdit(id);
+  };
+  const origCloseModal = closeModal;
+  closeModal = function() {
+    clearFieldErrors();
+    document.getElementById('e-submit').disabled = false;
+    origCloseModal();
+  };
 }
 
 // ── PWA / Install prompt ─────────────────────────────────
