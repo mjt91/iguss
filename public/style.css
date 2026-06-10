@@ -197,6 +197,39 @@ h2 {
   padding: 40px 20px;
 }
 
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+}
+.empty-state .emoji {
+  font-size: 3.5rem;
+  display: block;
+  margin-bottom: 12px;
+}
+.empty-state p {
+  color: #888;
+  font-size: 1rem;
+  margin-bottom: 4px;
+}
+.empty-state .cta {
+  color: var(--green);
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+/* Action feedback */
+@keyframes checkmark-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+.feedback-done {
+  animation: checkmark-pop 0.4s ease;
+  background: var(--green-light) !important;
+  pointer-events: none;
+}
+
 /* Form */
 form label {
   display: block;
