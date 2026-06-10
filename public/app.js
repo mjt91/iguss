@@ -452,6 +452,75 @@ function initPWA() {
   }
 }
 
+// ── Export/Import ───────────────────────────────────────────
+function exportData() {
+  const plants = loadPlants();
+  if (plants.length === 0) {
+    alert('Keine Pflanzen vorhanden. Füge zuerst Pflanzen hinzu!');
+    return;
+  }
+  const json = JSON.stringify(plants, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `iguss-backup-${todayStr()}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+let importedPlants = [];
+
+function importData() {
+  document.getElementById('json-file-input').click();
+}
+
+function handleFileSelected(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (evt) => {
+    try {
+      const data = JSON.parse(evt.target.result);
+      if (!Array.isArray(data) || data.length === 0) {
+        alert('Ungültige Datei: Keine Pflanzen gefunden.');
+        return;
+      }
+      const valid = data.filter(p => p.name && p.id && p.lastWatered && p.interval);
+      if (valid.length === 0) {
+        alert('Ungültige Datei: Keine gültigen Pflanzendaten gefunden.');
+        return;
+      }
+      importedPlants = valid;
+      showImportModal(valid.length);
+    } catch {
+      alert('Ungültige JSON-Datei.');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+function showImportModal(count) {
+  document.getElementById('import-count-text').textContent =
+    `${count} Pflanze${count !== 1 ? 'n' : ''} importieren.`;
+  document.getElementById('import-modal').classList.add('active');
+}
+
+function confirmImport() {
+  savePlants(importedPlants);
+  importedPlants = [];
+  document.getElementById('import-modal').classList.remove('active');
+  render();
+}
+
+function cancelImport() {
+  importedPlants = [];
+  document.getElementById('import-modal').classList.remove('active');
+}
+
 // ── Init ─────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   // DB Search
@@ -505,5 +574,12 @@ document.addEventListener('DOMContentLoaded', () => {
   initTabs();
   initForms();
   initPWA();
+
+  // Export/Import wiring
+  document.getElementById('json-file-input').addEventListener('change', handleFileSelected);
+  document.getElementById('import-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('import-modal')) cancelImport();
+  });
+
   render();
 });
