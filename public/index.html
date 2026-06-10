@@ -137,6 +137,19 @@
     </div>
   </div>
 
+  <!-- Delete Modal -->
+  <div id="delete-modal" class="modal">
+    <div class="modal-content" style="text-align:center">
+      <p style="font-size:3rem;margin-bottom:12px">🗑️</p>
+      <h3>Pflanze wirklich löschen?</h3>
+      <p id="delete-plant-name" style="color:var(--green-dark);font-weight:600;margin:8px 0 16px"></p>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="cancelDelete()">Abbrechen</button>
+        <button class="btn-primary" onclick="confirmDelete()" style="background:var(--red)">Löschen</button>
+      </div>
+    </div>
+  </div>
+
   <script src="/app.js"></script>
 </body>
 </html>

@@ -178,6 +178,7 @@ function initTabs() {
       btn.classList.add('active');
       document.getElementById(btn.dataset.tab).classList.add('active');
       render();
+      window.scrollTo(0, 0);
     });
   });
 }
@@ -221,7 +222,7 @@ function renderToday(plants) {
 function renderAll(plants) {
   const list = document.getElementById('all-plants');
   if (plants.length === 0) {
-    list.innerHTML = '<p class="empty">Noch keine Pflanzen. Gehe auf „Hinzufügen“!</p>';
+    list.innerHTML = '<div class="empty-state"><span class="emoji">🌱</span><p>Noch keine Pflanzen.</p><p class="cta">🌿 Gehe auf „Hinzufügen" und leg los!</p></div>';
     return;
   }
 
@@ -304,6 +305,8 @@ function attachCardListeners() {
 }
 
 // ── Actions ──────────────────────────────────────────────
+let pendingDeleteId = null;
+
 function waterPlant(id) {
   const plants = loadPlants();
   const p = plants.find(x => x.id === id);
@@ -311,6 +314,16 @@ function waterPlant(id) {
   p.lastWatered = todayStr();
   savePlants(plants);
   render();
+  // Show feedback on button
+  const btn = document.querySelector(`.water-btn[data-id="${id}"]`);
+  if (btn) {
+    btn.textContent = '✅ Erledigt';
+    btn.classList.add('feedback-done');
+    setTimeout(() => {
+      btn.textContent = '💧 Gegossen';
+      btn.classList.remove('feedback-done');
+    }, 1500);
+  }
 }
 
 function fertilizePlant(id) {
@@ -320,14 +333,39 @@ function fertilizePlant(id) {
   p.lastFertilized = todayStr();
   savePlants(plants);
   render();
+  // Show feedback on button
+  const btn = document.querySelector(`.fertilize-btn[data-id="${id}"]`);
+  if (btn) {
+    btn.textContent = '✅ Erledigt';
+    btn.classList.add('feedback-done');
+    setTimeout(() => {
+      btn.textContent = '🌿 Gedüngt';
+      btn.classList.remove('feedback-done');
+    }, 1500);
+  }
 }
 
 function deletePlant(id) {
-  if (!confirm('Pflanze wirklich löschen?')) return;
+  const p = loadPlants().find(x => x.id === id);
+  if (!p) return;
+  pendingDeleteId = id;
+  document.getElementById('delete-plant-name').textContent = p.name;
+  document.getElementById('delete-modal').classList.add('active');
+}
+
+function confirmDelete() {
+  if (!pendingDeleteId) return;
   let plants = loadPlants();
-  plants = plants.filter(x => x.id !== id);
+  plants = plants.filter(x => x.id !== pendingDeleteId);
   savePlants(plants);
+  pendingDeleteId = null;
+  document.getElementById('delete-modal').classList.remove('active');
   render();
+}
+
+function cancelDelete() {
+  pendingDeleteId = null;
+  document.getElementById('delete-modal').classList.remove('active');
 }
 
 function openEdit(id) {
@@ -415,6 +453,11 @@ function initForms() {
   // Close modal on backdrop click
   document.getElementById('edit-modal').addEventListener('click', e => {
     if (e.target === document.getElementById('edit-modal')) closeModal();
+  });
+
+  // Delete modal backdrop click
+  document.getElementById('delete-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('delete-modal')) cancelDelete();
   });
 }
 
