@@ -306,6 +306,19 @@ form input, form select {
 
 .modal-actions button { flex: 1; }
 
+/* App version badge */
+.app-version {
+  position: fixed;
+  bottom: 6px;
+  right: 10px;
+  font-size: 0.7rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--text);
+  opacity: 0.35;
+  pointer-events: none;
+  z-index: 1;
+}
+
 /* Install prompt */
 .install-bar {
   position: fixed;
