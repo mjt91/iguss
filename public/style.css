@@ -197,6 +197,27 @@ h2 {
   padding: 40px 20px;
 }
 
+/* Validation */
+.error-text {
+  display: block;
+  color: var(--red);
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+.error-text.warning {
+  color: #f4a261;
+}
+.field-error {
+  border-color: var(--red) !important;
+}
+.field-error.field-warning {
+  border-color: #f4a261 !important;
+}
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Form */
 form label {
   display: block;

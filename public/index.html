@@ -59,6 +59,7 @@
         <label>
           Name
           <input type="text" id="p-name" placeholder="z.B. Monstera" required>
+          <span class="error-text" id="add-name-error"></span>
         </label>
         <label>
           Art
@@ -76,10 +77,12 @@
         <label>
           Gieß-Intervall (Tage)
           <input type="number" id="p-interval" min="1" value="7" required>
+          <span class="error-text" id="add-interval-error"></span>
         </label>
         <label>
           Zuletzt gegossen
           <input type="date" id="p-last-watered" required>
+          <span class="error-text" id="add-water-error"></span>
           <script>document.getElementById('p-last-watered').value = new Date().toISOString().split('T')[0];</script>
         </label>
 
@@ -99,7 +102,7 @@
           </label>
         </fieldset>
 
-        <button type="submit" class="btn-primary">Speichern</button>
+        <button type="submit" class="btn-primary" id="p-submit">Speichern</button>
       </form>
     </section>
   </div>
@@ -110,7 +113,7 @@
       <h3>✏️ Pflanze bearbeiten</h3>
       <form id="edit-form">
         <input type="hidden" id="e-id">
-        <label>Name <input type="text" id="e-name" required></label>
+        <label>Name <input type="text" id="e-name" required><span class="error-text" id="e-name-error"></span></label>
         <label>Art <input type="text" id="e-type"></label>
         <label>Standort
           <select id="e-location" required>
@@ -119,8 +122,8 @@
             <option value="bed">🌱 Im Beet</option>
           </select>
         </label>
-        <label>Intervall (Tage) <input type="number" id="e-interval" min="1" required></label>
-        <label>Zuletzt gegossen <input type="date" id="e-last-watered" required></label>
+        <label>Intervall (Tage) <input type="number" id="e-interval" min="1" required><span class="error-text" id="e-interval-error"></span></label>
+        <label>Zuletzt gegossen <input type="date" id="e-last-watered" required><span class="error-text" id="e-water-error"></span></label>
 
         <fieldset class="fert-fieldset">
           <legend>🌿 Düngen (optional)</legend>
@@ -131,7 +134,7 @@
 
         <div class="modal-actions">
           <button type="button" class="btn-secondary" onclick="closeModal()">Abbrechen</button>
-          <button type="submit" class="btn-primary">Speichern</button>
+          <button type="submit" class="btn-primary" id="e-submit">Speichern</button>
         </div>
       </form>
     </div>
